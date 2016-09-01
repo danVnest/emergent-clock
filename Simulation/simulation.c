@@ -12,7 +12,7 @@
 #define Y_COUNT (NUMBER_HEIGHT + 2*Y_EXTRA)
 #define COUNT (X_COUNT * Y_COUNT)
 #define BORDER 0.1 // proportion of the clock width or height which is border
-#define GAP 0.5 // >0.5 for no hand overlap, >0.2929 for no diagonal overlap
+#define GAP 0.25 // >0.5 for no hand overlap, >0.2929 for no diagonal overlap
 
 // Simulation Definitions
 #define WINDOW_WIDTH 600
@@ -26,9 +26,21 @@
 #define Y_BORDER (BORDER * Y_MAX)
 
 double direction[COUNT] = {0};
-int placeMask[COUNT] = {0};
-int indexMask[COUNT] = {0};
-double number9[] = {-1,-1,0,3, -1,-1,0,2, 0,3,3,2, 0,0,3,2, 0,1,2,2, 1,1,1,2};
+int placeMask[COUNT] = {-1};
+int indexMask[COUNT] = {-1};
+int digit[] = {1,2,3,4};
+double zero[] = {1,1,0,3, 1,1,0,2, 0,3,3,2, 0,0,3,2, 0,1,2,2, 1,1,1,2};
+double one[] = {-1,-1,0,3, -1,-1,0,2, -1,-1,0,2, -1,-1,0,2, -1,-1,0,2, -1,-1,1,2};
+//double one[] = {0,3,3,3, 1,0,1,2, -1,0,2,-1, -1,0,2,-1, 0,3,2,-1, 1,1,2,-1};
+double two[] = {0,3,3,3, 0,1,1,2, 0,2,3,3, 1,1,0,2, 0,3,3,2, 1,1,1,2};
+double three[] = {0,3,3,3, 1,1,0,2, 0,3,3,2, 1,1,0,2, 0,3,3,2, 1,1,1,2};
+double four[] = {-1,-1,0,3, -1,-1,0,2, 0,3,3,2, 0,1,0,2, 0,2,0,2, 1,2,1,2};
+double five[] = {0,3,3,3, 1,1,0,2, 0,3,3,2, 0,1,1,2, 0,2,3,3, 1,1,1,2};
+double six[] = {0,3,3,3, 0,0,3,2, 0,1,2,2, 0,1,1,2, 0,2,3,3, 1,1,1,2};
+double seven[] = {-1,-1,0,3, -1,-1,0,2, -1,-1,0,2, -1,-1,0,2, 0,3,3,2, 1,1,1,2};
+double eight[] = {0,3,3,3, 0,1,0,2, 0,2,3,2, 0,0,3,2, 0,1,2,2, 1,1,1,2};
+double nine[] = {-1,-1,0,3, -1,-1,0,2, 0,3,3,2, 0,0,3,2, 0,1,2,2, 1,1,1,2};
+//double nine[] = {0,3,3,3, 1,1,0,2, 0,3,3,2, 0,0,3,2, 0,1,2,2, 1,1,1,2};
 double colon[] = {1,0, 2,3, 1,0, 2,3};
 
 void display() {
@@ -46,11 +58,23 @@ void display() {
 	int a = 0;
 	for (uint8_t j = 0; j < Y_COUNT; j++) {
 		for (uint8_t i = 0; i < X_COUNT; i++) {
-			if (placeMask[a] == 1) {
-				if (number9[indexMask[a]] != -1) direction[a] = number9[indexMask[a]] * M_PI/2;
-				else direction[a] += M_PI/180 * a /COUNT;
+			if (placeMask[a] == 0) {
+				if (one[indexMask[a]] != -1) direction[a] = one[indexMask[a]] * M_PI/2;
+				else direction[a] += M_PI/180 * a / COUNT;
 			}
-			else if (placeMask[a] == 2) direction[a] = colon[indexMask[a]] * M_PI/2;
+			else if (placeMask[a] == 1) {
+				if (two[indexMask[a]] != -1) direction[a] = two[indexMask[a]] * M_PI/2;
+				else direction[a] += M_PI/180 * a / COUNT;
+			}
+			else if (placeMask[a] == 2) {
+				if (three[indexMask[a]] != -1) direction[a] = three[indexMask[a]] * M_PI/2;
+				else direction[a] += M_PI/180 * a / COUNT;
+			}
+			else if (placeMask[a] == 3) {
+				if (four[indexMask[a]] != -1) direction[a] = four[indexMask[a]] * M_PI/2;
+				else direction[a] += M_PI/180 * a / COUNT;
+			}
+			else if (placeMask[a] == 4) direction[a] = colon[indexMask[a]] * M_PI/2;
 			else direction[a] += M_PI/180 * a / COUNT;
 			glVertex2f(X_BORDER + i*SEPERATION, Y_BORDER + j*SEPERATION);
 			glVertex2f((X_BORDER + i*SEPERATION) + LENGTH*sin(direction[a]), (Y_BORDER + j*SEPERATION) + LENGTH*cos(direction[a]));
@@ -84,15 +108,15 @@ void keyboard(unsigned char key,int x,int y) {
 void initEmergentClock(void) {
 	for (uint8_t j = Y_EXTRA; j < Y_EXTRA + NUMBER_HEIGHT; j++) {
 		for (uint8_t i = X_EXTRA; i < X_EXTRA + 2*NUMBER_WIDTH; i++) {
-			placeMask[i + j*X_COUNT] = 1;
-			placeMask[X_COUNT/2+i + j*X_COUNT] = 1;
+			placeMask[i + j*X_COUNT] = (i - X_EXTRA)/NUMBER_WIDTH;
 			indexMask[i + j*X_COUNT] = (i - X_EXTRA)%4 + (j - Y_EXTRA)*4;
+			placeMask[X_COUNT/2+i + j*X_COUNT] = placeMask[i + j*X_COUNT] + 2;
 			indexMask[X_COUNT/2+i + j*X_COUNT] = (i - X_EXTRA)%4 + (j - Y_EXTRA)*4;
 		}
 	}
 	for (uint8_t j = Y_COUNT/2 - COLON_SIZE; j < Y_COUNT/2 + COLON_SIZE; j++) {
 		for (uint8_t i = X_COUNT/2 - COLON_SIZE/2; i < X_COUNT/2 + COLON_SIZE/2; i++) {
-			placeMask[i + j*X_COUNT] = 2;
+			placeMask[i + j*X_COUNT] = 4;
 			indexMask[i + j*X_COUNT] = i - (X_COUNT/2 - COLON_SIZE/2) + (j - (Y_COUNT/2 - COLON_SIZE))*COLON_SIZE;
 		}
 	}
