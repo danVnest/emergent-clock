@@ -15,6 +15,7 @@
 #define COUNT (X_COUNT * Y_COUNT)
 #define BORDER 0.1 // proportion of the clock width or height which is border
 #define GAP 0.25 // >0.5 for no hand overlap, >0.2929 for no diagonal overlap
+#define FPS 10
 
 // Simulation Definitions
 #define WINDOW_WIDTH 600
@@ -33,8 +34,8 @@ int8_t placeMask[COUNT] = {[0 ... COUNT - 1] = -1};
 int8_t indexMask[COUNT] = {[0 ... COUNT - 1] = -1};
 int8_t digit[] = {1,0,0,4};
 int8_t zero[] = {0,3,3,3, 0,0,3,2, 0,0,2,2, 0,0,2,2, 0,1,2,2, 1,1,1,2};
-//int8_t one[] = {-1,-1,0,3, -1,-1,0,2, -1,-1,0,2, -1,-1,0,2, -1,-1,0,2, -1,-1,1,2};
-int8_t one[] = {0,3,3,3, 1,0,1,2, -1,0,2,-1, -1,0,2,-1, 0,3,2,-1, 1,1,2,-1};
+int8_t one[] = {-1,-1,0,3, -1,-1,0,2, -1,-1,0,2, -1,-1,0,2, -1,-1,0,2, -1,-1,1,2};
+//int8_t one[] = {0,3,3,3, 1,0,1,2, -1,0,2,-1, -1,0,2,-1, 0,3,2,-1, 1,1,2,-1};
 int8_t two[] = {0,3,3,3, 0,1,1,2, 0,2,3,3, 1,1,0,2, 0,3,3,2, 1,1,1,2};
 int8_t three[] = {0,3,3,3, 1,1,0,2, 0,3,3,2, 1,1,0,2, 0,3,3,2, 1,1,1,2};
 int8_t four[] = {-1,-1,0,3, -1,-1,0,2, 0,3,3,2, 0,1,0,2, 0,2,0,2, 1,2,1,2};
@@ -47,6 +48,18 @@ int8_t nine[] = {-1,-1,0,3, -1,-1,0,2, 0,3,3,2, 0,0,3,2, 0,1,2,2, 1,1,1,2};
 int8_t blank[NUMBER_SIZE] = {[0 ... NUMBER_SIZE - 1] = -1};
 int8_t colon[] = {1,0, 2,3, 1,0, 2,3};
 int8_t* digitMask[] = {zero, one, two, three, four, five, six, seven, eight, nine, blank};
+clock_t lastTime = 0;
+
+void updateDigits(void) {
+	time_t rawtime;
+	time(&rawtime);
+	struct tm *now = localtime(&rawtime);
+	digit[0] = now->tm_hour / 10;
+	digit[1] = now->tm_hour % 10;
+	digit[2] = now->tm_min / 10;
+	digit[3] = now->tm_min % 10;
+	if (digit[0] == 0) digit[0] = BLANK;
+}
 
 void display() {
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -78,8 +91,17 @@ void display() {
 		}
 	}
 	glEnd();
-	glFlush();
 	glutSwapBuffers();
+}
+
+void clockTimer(int data) {
+	glutTimerFunc(60*1000, clockTimer, 0);
+	updateDigits();
+}
+
+void displayTimer(int data) {
+	glutTimerFunc(1000 / FPS, displayTimer, 0);
+	glutPostRedisplay();
 }
 
 void reshape(int width, int height) {
@@ -120,14 +142,11 @@ void initEmergentClock(void) {
 			indexMask[i + j*X_COUNT] = i - xStart + (j - yStart)*COLON_SIZE;
 		}
 	}
+	updateDigits();
 	time_t rawtime;
 	time(&rawtime);
 	struct tm *now = localtime(&rawtime);
-	digit[0] = now->tm_hour / 10;
-	digit[1] = now->tm_hour % 10;
-	digit[2] = now->tm_min / 10;
-	digit[3] = now->tm_min % 10;
-	if (digit[0] == 0) digit[0] = BLANK;
+	glutTimerFunc((60 - (now->tm_sec % 60))*1000, clockTimer, 0);
 }
 
 int main(int argc, char **argv) {
@@ -140,7 +159,7 @@ int main(int argc, char **argv) {
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc(keyboard);
-	glutIdleFunc(display);
+	glutTimerFunc(0, displayTimer, 0);
 	glutMainLoop();
 	return 1;
 }
