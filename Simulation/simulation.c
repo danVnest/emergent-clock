@@ -65,21 +65,25 @@ void display() {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glLoadIdentity();
 	glBegin(GL_POLYGON);
-	glColor3f(1.0, 1.0, 1.0);
+	glColor3f(0.0, 0.0, 0.0);
 	glVertex2f(0.0, 0.0);
 	glVertex2f(0.0, Y_MAX);
 	glVertex2f(X_MAX, Y_MAX);
 	glVertex2f(X_MAX, 0.0);
 	glEnd();
 	glBegin(GL_LINES);
-	glColor3f(0.0, 0.0, 0.0);
+	glColor3f(1.0, 1.0, 1.0);
 	uint8_t a = 0;
 	for (uint8_t j = 0; j < Y_COUNT; j++) {
 		for (uint8_t i = 0; i < X_COUNT; i++) {
 			if (placeMask[a] == 4) direction[a] = colon[indexMask[a]] * M_PI/2;
 			else if (placeMask[a] != -1) {
 				int8_t goal = digitMask[digit[placeMask[a]]][indexMask[a]];
-				if (goal != -1) direction[a] = goal * M_PI/2;
+				if (goal != -1) {
+					if (direction[a] < goal * M_PI/2 - M_PI/30*3/2) direction[a] += M_PI/30;
+					else if (direction[a] > goal * M_PI/2 + M_PI/30*3/2) direction[a] -= M_PI/30;
+					else direction[a] = goal * M_PI/2;
+				}
 				else direction[a] += M_PI/180 * a / COUNT;
 			}
 			else direction[a] += M_PI/180 * a / COUNT;
