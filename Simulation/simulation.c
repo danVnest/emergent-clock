@@ -29,10 +29,10 @@
 #define Y_BORDER (BORDER * Y_MAX)
 #define BLANK 10
 
-double direction[COUNT] = {0};
-int8_t placeMask[COUNT] = {[0 ... COUNT - 1] = -1};
-int8_t indexMask[COUNT] = {[0 ... COUNT - 1] = -1};
-int8_t digit[] = {1,0,0,4};
+double direction[COUNT] = {0}; // current direction (in radians) of each hand 
+int8_t placeMask[COUNT] = {[0 ... COUNT - 1] = -1}; // classifies a hand as representing a particular digit location (0 = Xx:xx, 1 = xX:xx, 2 = xx:Xx, 3 = xx:xX, -1 = not a digit)
+int8_t indexMask[COUNT] = {[0 ... COUNT - 1] = -1}; // each hand has a corresponding index for it's location in the digit masks (or -1 if the hand is not at a location where a digit is displayed)
+int8_t digit[4] = {0}; // contains the time displayed, split into 4 digits
 int8_t zero[] = {0,3,3,3, 0,0,3,2, 0,0,2,2, 0,0,2,2, 0,1,2,2, 1,1,1,2};
 int8_t one[] = {-1,-1,0,3, -1,-1,0,2, -1,-1,0,2, -1,-1,0,2, -1,-1,0,2, -1,-1,1,2};
 //int8_t one[] = {0,3,3,3, 1,0,1,2, -1,0,2,-1, -1,0,2,-1, 0,3,2,-1, 1,1,2,-1};
@@ -74,11 +74,15 @@ void display() {
 	glBegin(GL_LINES);
 	glColor3f(1.0, 1.0, 1.0);
 	uint8_t a = 0;
+	uint8_t c = 0; // 'c' adjusts 'a' so that the time displayed is centered, used for placeMask and indexMask 
+	if (digit[0] == BLANK) c = 2; // centers times of format 0X:XX
+	else if (digit[0] == 1) c = 1; // centers times of format 1X:XX
 	for (uint8_t j = 0; j < Y_COUNT; j++) {
 		for (uint8_t i = 0; i < X_COUNT; i++) {
-			if (placeMask[a] == 4) direction[a] = colon[indexMask[a]] * M_PI/2;
-			else if (placeMask[a] != -1) {
-				int8_t goal = digitMask[digit[placeMask[a]]][indexMask[a]];
+			if (placeMask[a+c] != -1) {
+				int8_t goal;
+				if (placeMask[a+c] != 4) goal = digitMask[digit[placeMask[a+c]]][indexMask[a+c]];
+				else goal = colon[indexMask[a+c]];
 				if (goal != -1) {
 					if (direction[a] < goal * M_PI/2 - M_PI/30*3/2) direction[a] += M_PI/30;
 					else if (direction[a] > goal * M_PI/2 + M_PI/30*3/2) direction[a] -= M_PI/30;
