@@ -1,0 +1,5 @@
+Code/*
+!Code/*.c
+!Code/Makefile
+
+.DS_Store
