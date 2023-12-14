@@ -4,6 +4,8 @@ This clock consists of numerous clock hands in a grid.
 
 These hands coordinate their rotation to depict emergent patterns and a display of the time.
 
+![Simulation](simulation.gif)
+
 ### Simulation Guide ###
 
 The purpose of this simulation is to fast-track prototyping of different clock designs.
